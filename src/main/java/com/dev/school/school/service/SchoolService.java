@@ -45,10 +45,6 @@ public class SchoolService {
 
 			schoolRepo.save(entity);
 
-			addToSchoolWithIdCache(id, username, request);
-
-			addToAdminSchoolsCache(username, id);
-
 			log.info("school register completed :: username: {} and created school id: {}", username, id);
 			return SchoolRegResponse.builder().id(id).build();
 		} catch (Exception exception) {
@@ -74,32 +70,6 @@ public class SchoolService {
 		entity.setPhone(request.getPhone());
 		entity.setAdmin(username);
 		return entity;
-	}
-
-	private void addToSchoolWithIdCache(String id, String username, SchoolRegRequest request) {
-		log.info("Adding id: {} to SchoolWithId cache with info: {}", id, request.toString());
-		SchoolWithId schoolWithId = getSchoolWithId(id, username, request);
-		schoolWithIdRepo.save(schoolWithId);
-
-	}
-
-	private void addToAdminSchoolsCache(String username, String id) {
-		log.info("Adding id: {} to AdminSchool cache for user: {}", id, username);
-		Optional<AdminSchools> optionalAdminSchools = adminSchoolsRepo.findById(username);
-		if (optionalAdminSchools.isEmpty()) {
-			List<String> schools = new ArrayList<String>();
-			schools.add(id);
-			AdminSchools adminSchools = new AdminSchools();
-			adminSchools.setId(username);
-			adminSchools.setSchools(schools);
-			adminSchoolsRepo.save(adminSchools);
-		} else {
-			AdminSchools adminSchools = optionalAdminSchools.get();
-			System.out.println(adminSchools);
-			adminSchools.getSchools().add(id);
-			adminSchoolsRepo.save(adminSchools);
-		}
-
 	}
 
 	public List<SchoolWithId> listSchools(String username) throws SchoolException {
