@@ -44,6 +44,8 @@ public class SchoolService {
 			String id = entity.getId();
 
 			schoolRepo.save(entity);
+			
+			invalidateAdminSchoolsCache(username);
 
 			log.info("school register completed :: username: {} and created school id: {}", username, id);
 			return SchoolRegResponse.builder().id(id).build();
@@ -51,6 +53,11 @@ public class SchoolService {
 			log.error("school register has encountered an error: {}", exception.getMessage());
 			throw new SchoolException(exception.getMessage());
 		}
+	}
+
+	private void invalidateAdminSchoolsCache(String username) {
+		log.info("Invalidating admin school cache");
+		adminSchoolsRepo.deleteById(username);
 	}
 
 	private SchoolEntity getSchoolEntity(String username, SchoolRegRequest request) {
@@ -221,6 +228,11 @@ public class SchoolService {
 		log.info("Starting to update school for id: {}, user: {}", id, username);
 		try {
 
+			boolean exists = checkExistWithIdAndUsername(id, username);
+			if(!exists) {
+				throw new SchoolException("You can't update it");
+			}
+			
 			SchoolWithId latestSchoolWithId = getSchoolWithId(id, username, request);
 			updateSchoolInCache(id, latestSchoolWithId);
 
@@ -234,6 +246,11 @@ public class SchoolService {
 			log.error("Updating school id: {} has encountered an error: {}", id, exception.getMessage());
 			throw new SchoolException(exception.getMessage());
 		}
+	}
+
+	private boolean checkExistWithIdAndUsername(String id, String username) {
+		Optional<String> optionalId = schoolRepo.findByIdAndUsername(id, username);
+		return !optionalId.isEmpty() && optionalId.get()!=null;
 	}
 
 	private SchoolWithId getSchoolWithId(String id, String admin, SchoolRegRequest request) {
@@ -262,9 +279,14 @@ public class SchoolService {
 	public List<SchoolWithId> deRegister(String id, String username) throws SchoolException {
 		log.info("Starting to deregister school for id: {}, user: {}", id, username);
 		try {
+			
+			boolean exists = checkExistWithIdAndUsername(id, username);
+			if(!exists) {
+				throw new SchoolException("You can't deregister it");
+			}
 
 			deleteSchoolWithIdFromCache(id);
-			deRegisterFromAdminSchoolCache(id, username);
+			invalidateAdminSchoolsCache(username);
 			deRegisterSchoolFromDB(id);
 
 			List<SchoolWithId> schoolListResponse = listSchools(username);
@@ -282,20 +304,6 @@ public class SchoolService {
 	public void deleteSchoolWithIdFromCache(String id) {
 		log.info("Deleting from school cache id: {}", id);
 		schoolWithIdRepo.deleteById(id);
-	}
-
-	public void deRegisterFromAdminSchoolCache(String id, String username) {
-		log.info("Deregistering adminschool cache id: {} from user: {}", id, username);
-		Optional<AdminSchools> optionalAdminSchools = adminSchoolsRepo.findById(username);
-		if (!optionalAdminSchools.isEmpty()) {
-			AdminSchools adminSchools = optionalAdminSchools.get();
-			adminSchools.getSchools().remove(id);
-			if (adminSchools.getSchools().isEmpty()) {
-				adminSchoolsRepo.deleteById(username);
-			} else {
-				adminSchoolsRepo.save(adminSchools);
-			}
-		}
 	}
 
 	public void deRegisterSchoolFromDB(String id) {
