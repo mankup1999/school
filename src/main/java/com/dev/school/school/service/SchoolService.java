@@ -1,15 +1,15 @@
 package com.dev.school.school.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.dev.school.school.constants.SchoolConstants;
-import com.dev.school.school.enumeration.SearchType;
 import com.dev.school.school.exception.SchoolException;
 import com.dev.school.school.mysql.entity.SchoolEntity;
 import com.dev.school.school.mysql.repository.SchoolRepo;
@@ -44,7 +44,7 @@ public class SchoolService {
 			String id = entity.getId();
 
 			schoolRepo.save(entity);
-			
+
 			invalidateAdminSchoolsCache(username);
 
 			log.info("school register completed :: username: {} and created school id: {}", username, id);
@@ -181,12 +181,15 @@ public class SchoolService {
 		return schoolWithId;
 	}
 
-	public List<SchoolWithId> querySchools(String name, SearchType type) throws SchoolException {
-		log.info("Querying schools started :: name: {}, type: {}", name, type);
+	public List<SchoolWithId> querySchools(String name, String page, String pageSize)
+			throws SchoolException {
+		log.info("Querying schools started :: name: {}", name);
 		try {
-			int limit = getSearchLimit(type);
+
+			Map<String, Integer> pageMap = getPageMap(page, pageSize);
+
 			String nameSubstr = name + "%";
-			List<String> ids = schoolRepo.findByNameSubstr(nameSubstr, limit);
+			List<String> ids = schoolRepo.findByNameSubstr(nameSubstr, pageMap.get("limit"), pageMap.get("offset"));
 			return getSchoolListFromIds(ids);
 		} catch (Exception exception) {
 			log.error("querying schools has encountered an error: {}", exception.getMessage());
@@ -194,12 +197,18 @@ public class SchoolService {
 		}
 	}
 
-	private int getSearchLimit(SearchType type) {
-		int limit = SchoolConstants.SEARCH_BAR_RESULTS;
-		if (type == SearchType.QUERIED) {
-			limit = SchoolConstants.QUERIED_RESULTS;
-		}
-		return limit;
+	private Map<String, Integer> getPageMap(String page, String pageSize) {
+		Map<String, Integer> pageMap = new HashMap<String, Integer>();
+
+		int offset = Integer.parseInt(page);
+		int limit = Integer.parseInt(pageSize);
+
+		offset = (offset - 1) * limit;
+
+		pageMap.put("offset", offset);
+		pageMap.put("limit", limit);
+
+		return pageMap;
 	}
 
 	private List<SchoolWithId> getSchoolListFromIds(List<String> ids) {
@@ -229,10 +238,10 @@ public class SchoolService {
 		try {
 
 			boolean exists = checkExistWithIdAndUsername(id, username);
-			if(!exists) {
+			if (!exists) {
 				throw new SchoolException("You can't update it");
 			}
-			
+
 			SchoolWithId latestSchoolWithId = getSchoolWithId(id, username, request);
 			updateSchoolInCache(id, latestSchoolWithId);
 
@@ -250,7 +259,7 @@ public class SchoolService {
 
 	private boolean checkExistWithIdAndUsername(String id, String username) {
 		Optional<String> optionalId = schoolRepo.findByIdAndUsername(id, username);
-		return !optionalId.isEmpty() && optionalId.get()!=null;
+		return !optionalId.isEmpty() && optionalId.get() != null;
 	}
 
 	private SchoolWithId getSchoolWithId(String id, String admin, SchoolRegRequest request) {
@@ -279,9 +288,9 @@ public class SchoolService {
 	public List<SchoolWithId> deRegister(String id, String username) throws SchoolException {
 		log.info("Starting to deregister school for id: {}, user: {}", id, username);
 		try {
-			
+
 			boolean exists = checkExistWithIdAndUsername(id, username);
-			if(!exists) {
+			if (!exists) {
 				throw new SchoolException("You can't deregister it");
 			}
 
