@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dev.school.school.enumeration.SearchType;
 import com.dev.school.school.exception.SchoolException;
 import com.dev.school.school.redis.entity.SchoolWithId;
 import com.dev.school.school.request.SchoolRegRequest;
@@ -65,12 +64,14 @@ public class SchoolController {
 
 	@GetMapping(path = "/query")
 	public Response<List<SchoolWithId>> querySchools(@RequestParam String name,
-			@RequestParam(name = "type") SearchType type) throws SchoolException {
-		log.info("Request :: querying schools with name: {} and type: {}", name, type);
+			@RequestParam(defaultValue = "1") String page,
+			@RequestParam(defaultValue = "10") String pageSize
+			) throws SchoolException {
+		log.info("Request :: querying schools with name: {}", name);
 
-		List<SchoolWithId> response = schoolService.querySchools(name, type);
+		List<SchoolWithId> response = schoolService.querySchools(name, page, pageSize);
 
-		log.info("Response :: querying schools with name: {}, type: {} and response: {}", name, type, response);
+		log.info("Response :: querying schools with name: {} and response: {}", name, response);
 
 		return new Response<List<SchoolWithId>>(true, null, response);
 	}
