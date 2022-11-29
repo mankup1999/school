@@ -1,0 +1,6 @@
+package com.dev.school.school.enumeration;
+
+public enum SubjectEnum {
+	HINDI, ENGLISH, MATHS, SCIENCE, PHYSICS, CHEMISTRY, BIOLOGY, SOCIAL_SCIENCE, GK, POLITICAL_SCIENCE, GEOGRAPHY,
+	HISTORY, COMPUTER_SCEINCE
+}
