@@ -8,7 +8,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.dev.school.school.exception.StaffException;
+import com.dev.school.school.exception.SchoolException;
 import com.dev.school.school.mysql.entity.StaffEntity;
 import com.dev.school.school.mysql.repository.SchoolRepo;
 import com.dev.school.school.mysql.repository.StaffRepo;
@@ -38,14 +38,14 @@ public class StaffService {
 	@Autowired
 	private StaffWithIdRepo staffWithIdRepo;
 
-	public StaffRegResponse register(StaffRegRequest request, String username, String schoolId) throws StaffException {
+	public StaffRegResponse register(StaffRegRequest request, String username, String schoolId) throws SchoolException {
 
 		log.info("Staff: {} registration started... Admin: {}, School: {}", request, username, schoolId);
 
 		try {
 
 			if (!checkAdminAndSchoolExists(username, schoolId)) {
-				throw new StaffException("You can't add staffs");
+				throw new SchoolException("You can't add staffs");
 			}
 
 			StaffEntity staffEntity = getStaffEntity(request, schoolId);
@@ -60,7 +60,7 @@ public class StaffService {
 		} catch (Exception exception) {
 			log.info("Staff: {} registration has encountered an error... Admin: {}, School: {}, Error: {}", request,
 					username, schoolId, exception.getMessage());
-			throw new StaffException(exception.getMessage());
+			throw new SchoolException(exception.getMessage());
 		}
 
 	}
@@ -95,7 +95,7 @@ public class StaffService {
 		return !optionalId.isEmpty() && optionalId.get() != null;
 	}
 
-	public StaffResponse getStaffInfo(String id) throws StaffException {
+	public StaffResponse getStaffInfo(String id) throws SchoolException {
 
 		log.info("fetching staff info for id: {}", id);
 		try {
@@ -104,7 +104,7 @@ public class StaffService {
 
 		} catch (Exception exception) {
 			log.info("fetching staff info for id: {} has encountered an error: {}", id, exception.getMessage());
-			throw new StaffException(exception.getMessage());
+			throw new SchoolException(exception.getMessage());
 		}
 
 	}
@@ -207,7 +207,7 @@ public class StaffService {
 				.designation(staffWithId.getDesignation()).school(staffWithId.getSchool()).build();
 	}
 
-	public List<StaffResponse> getAllStaffsOfSchool(String schoolId) throws StaffException {
+	public List<StaffResponse> getAllStaffsOfSchool(String schoolId) throws SchoolException {
 		log.info("Fetching staffs from school: {}", schoolId);
 		try {
 
@@ -224,7 +224,7 @@ public class StaffService {
 
 		} catch (Exception exception) {
 			log.info("Fetching staffs from school: {} has encountered an error: {}", schoolId, exception.getMessage());
-			throw new StaffException(exception.getMessage());
+			throw new SchoolException(exception.getMessage());
 		}
 	}
 
@@ -292,12 +292,12 @@ public class StaffService {
 	}
 
 	public StaffResponse updateStaffInfo(StaffRegRequest request, String username, String schoolId, String staffId)
-			throws StaffException {
+			throws SchoolException {
 		log.info("Updating staff: {} with info:{} by user: {}", staffId, request, username);
 		try {
 
 			if (!checkAdminAndSchoolExists(username, schoolId)) {
-				throw new StaffException("You can't update staffs");
+				throw new SchoolException("You can't update staffs");
 			}
 
 			updateStaffInDb(staffId, request, schoolId);
@@ -312,7 +312,7 @@ public class StaffService {
 		} catch (Exception exception) {
 			log.info("Updating staff: {} with info:{} by user: {} has encountered an error: {}", staffId, request,
 					username, exception.getMessage());
-			throw new StaffException(exception.getMessage());
+			throw new SchoolException(exception.getMessage());
 		}
 	}
 
@@ -351,12 +351,12 @@ public class StaffService {
 
 	}
 
-	public List<StaffResponse> deleteStaff(String username, String schoolId, String staffId) throws StaffException {
+	public List<StaffResponse> deleteStaff(String username, String schoolId, String staffId) throws SchoolException {
 		log.info("Deleting staff: {} by user: {}", staffId, username);
 		try {
 
 			if (!checkAdminAndSchoolExists(username, schoolId)) {
-				throw new StaffException("You can't delete staffs");
+				throw new SchoolException("You can't delete staffs");
 			}
 
 			deleteStaffFromDb(staffId);
@@ -369,7 +369,7 @@ public class StaffService {
 		} catch (Exception exception) {
 			log.info("Deleting staff: {}  by user: {} has encountered an error: {}", staffId, username,
 					exception.getMessage());
-			throw new StaffException(exception.getMessage());
+			throw new SchoolException(exception.getMessage());
 		}
 	}
 

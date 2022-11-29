@@ -276,7 +276,10 @@ public class SchoolService {
 	}
 
 	public void updateSchoolInCache(String id, SchoolWithId schoolWithId) {
-		log.info("Updating school cache for id: {}, school: {}", id, schoolWithId.toString());
+		if(schoolWithId == null) {
+			return;
+		}
+		log.info("Updating school cache for id: {}, school: {}", id, schoolWithId);
 		schoolWithIdRepo.save(schoolWithId);
 	}
 
@@ -345,6 +348,11 @@ public class SchoolService {
 	}
 
 	private SchoolEntity getSchoolEntityFromSchoolWithId(SchoolWithId schoolWithId) {
+		
+		if(schoolWithId==null) {
+			return null;
+		}
+		
 		SchoolEntity schoolEntity = new SchoolEntity();
 		schoolEntity.setId(schoolWithId.getId());
 		schoolEntity.setName(schoolWithId.getName());
